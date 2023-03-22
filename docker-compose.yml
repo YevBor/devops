@@ -5,14 +5,20 @@ services:
     build: app_1
     ports:
       - "5000"
+    volumes:
+      - ./app_1/logs:/app_1/logs
   app_2:
     build: app_2
     ports:
       - "5000"
+    volumes:
+      - ./app_2/logs:/app_2/logs
   app_3:
     build: app_3
     ports:
       - "5000"
+    volumes:
+      - ./app_3/logs:/app_3/logs
   nginx: 
     image: nginx:latest
     ports:

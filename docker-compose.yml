@@ -50,6 +50,7 @@ services:
     volumes:
       - ./db:/var/lib/mysql
       - ./logs:/var/log/mysql
+
   
 
 

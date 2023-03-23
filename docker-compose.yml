@@ -7,32 +7,17 @@ services:
       - "5000"
     restart: always
     volumes:
-      - ./app_1/logs:/app/
+      - .:/code
+      - ./app_1/log:/var/log
+    deploy:
+      replicas: 3
       
-  app_2:
-    build: app_2
-    ports:
-      - "5000"
-    restart: always
-    volumes:
-      - ./app_2/logs:/app_2/logs
-
-  app_3:
-    build: app_3
-    ports:
-      - "5000"
-    restart: always
-    volumes:
-      - ./app_3/logs:/app_3/logs
-
   nginx: 
     image: nginx:latest
     ports:
       - "80:80"
     depends_on:
       - app_1
-      - app_2
-      - app_3
       - db
     restart: always
     volumes:  

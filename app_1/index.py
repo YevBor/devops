@@ -13,9 +13,10 @@ db_config = {
     'database': 'mydb',
 }
 
-def create_access_log_table():
+def create_tables():
     connection = mysql.connector.connect(**db_config)
     cursor = connection.cursor()
+    
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS access_log (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -24,18 +25,42 @@ def create_access_log_table():
             server_internal_ip VARCHAR(255)
         )
     ''')
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS global_counter (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            count INT NOT NULL
+        )
+    ''')
+    
+    cursor.execute("INSERT IGNORE INTO global_counter (id, count) VALUES (1, 0)")
+    
     connection.commit()
     cursor.close()
     connection.close()
 
-create_access_log_table()
+create_tables()
 
-global_counter = 0
+def increment_global_counter():
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+    cursor.execute("UPDATE global_counter SET count = count + 1 WHERE id = 1")
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+def get_global_counter():
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+    cursor.execute("SELECT count FROM global_counter WHERE id = 1")
+    result = cursor.fetchone()
+    cursor.close()
+    connection.close()
+    return result[0] if result else 0
 
 @app.route('/')
 def index():
-    global global_counter
-    global_counter += 1
+    increment_global_counter()
 
     connection = mysql.connector.connect(**db_config)
     cursor = connection.cursor()
@@ -62,17 +87,19 @@ def index():
 
 @app.route('/showcount')
 def showcount():
-    global global_counter
+    global_counter = get_global_counter()
     return str(global_counter)
 
-# @app.route('/accesslog')
-# def accesslog():
-#     connection = mysql.connector.connect(**db_config)
-#     cursor = connection.cursor()
-#     cursor.execute('SELECT * FROM access_log;')
-#     result = cursor.fetchall()
-#     cursor.close()
-#     connection.close()
-#     return str(result)
 
+@app.route('/accesslog')
+def accesslog():
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+    cursor.execute('SELECT * FROM access_log;')
+    result = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return str(result)
 
+if __name__ == '__main__':
+    app.run(debug=True)

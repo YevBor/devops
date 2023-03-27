@@ -90,16 +90,5 @@ def showcount():
     global_counter = get_global_counter()
     return str(global_counter)
 
-
-@app.route('/accesslog')
-def accesslog():
-    connection = mysql.connector.connect(**db_config)
-    cursor = connection.cursor()
-    cursor.execute('SELECT * FROM access_log;')
-    result = cursor.fetchall()
-    cursor.close()
-    connection.close()
-    return str(result)
-
 if __name__ == '__main__':
     app.run(debug=True)

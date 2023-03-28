@@ -1,5 +1,6 @@
 #!/bin/bash
 
-echo "Changing the scale for the container apps to 5"
+echo "give a number of scale:"
+read scale_number
 
-docker-compose up -d --scale app_1=5
+docker-compose up -d --scale app_1=$scale_number

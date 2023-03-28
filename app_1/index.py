@@ -13,54 +13,30 @@ db_config = {
     'database': 'mydb',
 }
 
-def create_tables():
+def create_access_log_table():
     connection = mysql.connector.connect(**db_config)
     cursor = connection.cursor()
-    
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS access_log (
             id INT AUTO_INCREMENT PRIMARY KEY,
             date_time DATETIME,
             client_ip VARCHAR(255),
-            server_internal_ip VARCHAR(255)
+            server_internal_ip VARCHAR(255),
+            global_counter VARCHAR(255)
         )
     ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS global_counter (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            count INT NOT NULL
-        )
-    ''')
-    
-    cursor.execute("INSERT IGNORE INTO global_counter (id, count) VALUES (1, 0)")
-    
     connection.commit()
     cursor.close()
     connection.close()
 
-create_tables()
+create_access_log_table()
 
-def increment_global_counter():
-    connection = mysql.connector.connect(**db_config)
-    cursor = connection.cursor()
-    cursor.execute("UPDATE global_counter SET count = count + 1 WHERE id = 1")
-    connection.commit()
-    cursor.close()
-    connection.close()
-
-def get_global_counter():
-    connection = mysql.connector.connect(**db_config)
-    cursor = connection.cursor()
-    cursor.execute("SELECT count FROM global_counter WHERE id = 1")
-    result = cursor.fetchone()
-    cursor.close()
-    connection.close()
-    return result[0] if result else 0
+global_counter = 0
 
 @app.route('/')
 def index():
-    increment_global_counter()
+    global global_counter
+    global_counter += 1
 
     connection = mysql.connector.connect(**db_config)
     cursor = connection.cursor()
@@ -70,9 +46,9 @@ def index():
     server_internal_ip = socket.gethostbyname(socket.gethostname())
 
     cursor.execute('''
-        INSERT INTO access_log (date_time, client_ip, server_internal_ip)
-        VALUES (%s, %s, %s)
-    ''', (date_time, client_ip, server_internal_ip))
+        INSERT INTO access_log (date_time, client_ip, server_internal_ip, global_counter)
+        VALUES (%s, %s, %s, %s)
+    ''', (date_time, client_ip, server_internal_ip, global_counter))
 
     connection.commit()
     cursor.close()
@@ -87,8 +63,16 @@ def index():
 
 @app.route('/showcount')
 def showcount():
-    global_counter = get_global_counter()
+    global global_counter
     return str(global_counter)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+@app.route('/accesslog')
+def accesslog():
+    connection = mysql.connector.connect(**db_config)
+    cursor = connection.cursor()
+    cursor.execute('SELECT * FROM access_log;')
+    result = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return str(result)
+

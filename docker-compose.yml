@@ -11,6 +11,8 @@ services:
       - log:/var/log
     deploy:
       replicas: 3
+    depends_on:
+      - db
       
   proxy:
     build: proxy

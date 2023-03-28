@@ -31,7 +31,7 @@ def create_access_log_table():
 
 create_access_log_table()
 
-global_counter = 0
+global_counter = 1
 
 @app.route('/')
 def index():
